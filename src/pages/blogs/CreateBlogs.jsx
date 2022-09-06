@@ -8,10 +8,12 @@ import {
   Grid,
   IconButton,
   Tooltip,
+  Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Buttons from "../../components/button/Button";
-import axios from "axios";
+import axios, { Axios } from "axios";
 import { categories } from "../../blogCategory/category";
 import Alert from "../../components/alert/Alerts";
 import { UserContext } from "../../context/Context";
@@ -30,11 +32,30 @@ function CreateBlogs() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState();
   const [file, setFile] = useState([]);
+  const [imgLink, setImgLink] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const handleImageUpload = (imgFile) => {
     setFile(imgFile);
   };
-
+  useEffect(() => {
+    if (file.length > 0) {
+      setShowModal(true);
+      const data = new FormData();
+      data.append("file", file[0]);
+      data.append("upload_preset", "image_preset");
+      axios
+        .post(
+          "https://api.cloudinary.com/v1_1/sumitimgcloud/image/upload",
+          data
+        )
+        .then((response) => {
+          setImgLink(response.data.url);
+          setShowModal(false);
+        })
+        .catch((response) => response.message);
+    }
+  }, [file]);
   useState(() => {
     // const blankarr = [];
     // const haveData = localStorage.getItem("blogData");
@@ -67,7 +88,7 @@ function CreateBlogs() {
         createdDate: dateTime,
         comments: [],
         likes: [],
-        image: file.map((file) => file.preview)[0],
+        image: imgLink,
       };
       let arr = [];
       const blogData = JSON.parse(localStorage.getItem("blogData"));
@@ -90,6 +111,16 @@ function CreateBlogs() {
   };
   return (
     <div className="blog-container">
+      <Backdrop
+        open={showModal}
+        sx={{
+          position: "fixed",
+          top: 0,
+          zIndex: 5,
+        }}
+      >
+        <CircularProgress />
+      </Backdrop>
       {user.userDet.type === "user" ? (
         <form onSubmit={submitHandler}>
           <Alert
@@ -165,7 +196,7 @@ function CreateBlogs() {
                     <CloseIcon />
                   </Tooltip>
                 </IconButton>
-                <img key={file.name} src={file.preview} />
+                <img key={file.name} src={imgLink} />
               </div>
             ))}
           <Buttons variant="contained" type="submit">

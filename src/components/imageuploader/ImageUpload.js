@@ -5,12 +5,10 @@ import "../../styles/styles.css";
 function ImageUpload({ setImage }) {
   const { getRootProps, getInputProps } = useDropzone({
     accept: "image/*",
-    onDrop: (acceptedFiles) => {
-      setImage(
-        acceptedFiles.map((file) =>
-          Object.assign(file, { preview: URL.createObjectURL(file) })
-        )
-      );
+    onDrop: (acceptedFile) => {
+      acceptedFile.forEach((file) => {
+        setImage((prevState) => [...prevState, file]);
+      });
     },
   });
 
